@@ -5,25 +5,30 @@
 
 import { Platform } from 'react-native';
 
-const tintColorLight = '#0a7ea4';
-const tintColorDark = '#fff';
+// Accessible brand tint (green) that passes contrast on both themes
+const tintColorLight = '#16a34a'; // green-600
+const tintColorDark = '#22c55e';  // green-500
 
 export const Colors = {
   light: {
-    text: '#11181C',
-    background: '#fff',
+    text: '#111827',
+    background: '#F8FAFC',
     tint: tintColorLight,
-    icon: '#687076',
-    tabIconDefault: '#687076',
+    icon: '#6B7280',
+    tabIconDefault: '#6B7280',
     tabIconSelected: tintColorLight,
+    card: '#FFFFFF',
+    border: '#E5E7EB',
   },
   dark: {
-    text: '#ECEDEE',
-    background: '#151718',
+    text: '#E5E7EB',
+    background: '#0F172A',
     tint: tintColorDark,
-    icon: '#9BA1A6',
-    tabIconDefault: '#9BA1A6',
+    icon: '#9CA3AF',
+    tabIconDefault: '#9CA3AF',
     tabIconSelected: tintColorDark,
+    card: '#1F2937',
+    border: '#374151',
   },
 };
 
