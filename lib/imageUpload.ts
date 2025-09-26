@@ -1,4 +1,4 @@
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 import { storage } from '@/config/firebase.config';
 import * as FileSystem from 'expo-file-system';
 
@@ -116,6 +116,70 @@ export class ImageUploadService {
 
     } catch (error) {
       return false;
+    }
+  }
+
+  /**
+   * Deletes an image from Firebase Storage
+   * @param userId - User ID to locate the image
+   * @param assessmentId - Assessment ID for the image filename
+   * @returns Promise<void>
+   */
+  static async deleteImage(userId: string, assessmentId: string): Promise<void> {
+    try {
+      // Create a reference to the storage location (same path as upload)
+      const imageRef = ref(storage, `assessments/${userId}/${assessmentId}.jpg`);
+
+      // Delete the image
+      await deleteObject(imageRef);
+
+      console.log(`Successfully deleted image for assessment ${assessmentId}`);
+    } catch (error: any) {
+      // If the file doesn't exist, that's okay - it might have been deleted already
+      if (error?.code === 'storage/object-not-found') {
+        console.log(`Image for assessment ${assessmentId} was already deleted or doesn't exist`);
+        return;
+      }
+
+      console.error('Error deleting image from Firebase Storage:', error);
+      throw new Error(`Failed to delete image: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  /**
+   * Deletes an image from Firebase Storage using the download URL
+   * This method extracts the path from the URL and deletes the file
+   * @param downloadUrl - The Firebase Storage download URL
+   * @returns Promise<void>
+   */
+  static async deleteImageByUrl(downloadUrl: string): Promise<void> {
+    try {
+      // Extract the storage path from the download URL
+      // Firebase Storage URLs have the format: https://firebasestorage.googleapis.com/v0/b/{bucket}/o/{path}?{params}
+      const url = new URL(downloadUrl);
+      const pathMatch = url.pathname.match(/\/o\/(.+)$/);
+
+      if (!pathMatch) {
+        throw new Error('Invalid Firebase Storage URL format');
+      }
+
+      // Decode the path (Firebase Storage URLs encode the path)
+      const storagePath = decodeURIComponent(pathMatch[1]);
+
+      // Create a reference and delete
+      const imageRef = ref(storage, storagePath);
+      await deleteObject(imageRef);
+
+      console.log(`Successfully deleted image at path: ${storagePath}`);
+    } catch (error: any) {
+      // If the file doesn't exist, that's okay - it might have been deleted already
+      if (error?.code === 'storage/object-not-found') {
+        console.log(`Image was already deleted or doesn't exist`);
+        return;
+      }
+
+      console.error('Error deleting image by URL from Firebase Storage:', error);
+      throw new Error(`Failed to delete image: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 

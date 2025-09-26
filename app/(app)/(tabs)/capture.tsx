@@ -82,15 +82,35 @@ export default function Capture() {
   const pickFromLibrary = async () => {
     const lib = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (lib.status !== 'granted') { alert('Photo library permission required'); return; }
+
+    // Request location permissions for uploaded photos too
+    await Location.requestForegroundPermissionsAsync();
+
     const res = await ImagePicker.launchImageLibraryAsync({ quality: 0.8, mediaTypes: ImagePicker.MediaTypeOptions.Images, exif: true });
     if (res.canceled) return;
+
     const asset = res.assets[0];
     setUri(asset.uri);
+
+    // Try to get GPS from EXIF data first
     const exifLat = (asset as any)?.exif?.GPSLatitude;
     const exifLon = (asset as any)?.exif?.GPSLongitude;
     if (typeof exifLat === 'number' && typeof exifLon === 'number') {
       setCoords({ latitude: exifLat, longitude: exifLon });
+      return;
     }
+
+    // If no EXIF GPS data, get current location
+    setResolvingLoc(true);
+    try {
+      const last = await Location.getLastKnownPositionAsync();
+      if (last?.coords) {
+        setCoords({ latitude: last.coords.latitude, longitude: last.coords.longitude });
+      } else {
+        const pos = await getCurrentPositionWithTimeout(6000);
+        if (pos) setCoords({ latitude: pos.coords.latitude, longitude: pos.coords.longitude });
+      }
+    } catch {} finally { setResolvingLoc(false); }
   };
 
   const useThis = () => {

@@ -289,8 +289,29 @@ export class FirestoreService {
 
   static async deleteAssessment(id: string) {
     try {
+      // First, get the assessment to retrieve the image URL and user ID
+      const assessment = await this.getAssessment(id);
+
+      // Delete the Firestore document
       const docRef = doc(db, 'assessments', id);
       await deleteDoc(docRef);
+
+      // Delete the associated image from Firebase Storage
+      try {
+        if (assessment.photo_uri) {
+          // Try to delete using the download URL first (more reliable)
+          await ImageUploadService.deleteImageByUrl(assessment.photo_uri);
+        } else {
+          // Fallback: delete using userId and assessmentId
+          await ImageUploadService.deleteImage(assessment.userId, id);
+        }
+      } catch (imageError) {
+        // Log the error but don't fail the entire operation
+        // The assessment document is already deleted, so this is just cleanup
+        console.warn('Failed to delete associated image, but assessment was deleted successfully:', imageError);
+      }
+
+      console.log(`Successfully deleted assessment ${id} and its associated image`);
     } catch (error) {
       console.error('Error deleting assessment:', error);
       throw error;
@@ -303,13 +324,13 @@ export class FirestoreService {
       // Get all user's assessments
       const assessments = await this.listAssessments(userId);
 
-      // Delete all assessments
+      // Delete all assessments (this will also delete their images)
       const deletePromises = assessments.map(assessment =>
         assessment.id ? this.deleteAssessment(assessment.id) : Promise.resolve()
       );
 
       await Promise.all(deletePromises);
-      console.log(`Cleared ${assessments.length} assessments for user ${userId}`);
+      console.log(`Cleared ${assessments.length} assessments and their images for user ${userId}`);
     } catch (error) {
       console.error('Error clearing user data:', error);
       throw error;
@@ -322,13 +343,13 @@ export class FirestoreService {
       // Get all assessments
       const assessments = await this.listAllAssessments();
 
-      // Delete all assessments
+      // Delete all assessments (this will also delete their images)
       const deletePromises = assessments.map(assessment =>
         assessment.id ? this.deleteAssessment(assessment.id) : Promise.resolve()
       );
 
       await Promise.all(deletePromises);
-      console.log(`Cleared ${assessments.length} total assessments from system`);
+      console.log(`Cleared ${assessments.length} total assessments and their images from system`);
     } catch (error) {
       console.error('Error clearing all system data:', error);
       throw error;

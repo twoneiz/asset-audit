@@ -17,10 +17,51 @@ export default function TabsLayout() {
           headerStyle: { backgroundColor: Colors[scheme].background },
         }}
       >
-        <Tabs.Screen name="index" options={{ title: 'Dashboard', tabBarIcon: ({ color }) => <Ionicons name="home-outline" size={24} color={color} /> }} />
-        <Tabs.Screen name="capture" options={{ title: 'Capture', tabBarIcon: ({ color }) => <Ionicons name="camera-outline" size={24} color={color} /> }} />
-        <Tabs.Screen name="assess" options={{ title: 'Assess', tabBarIcon: ({ color }) => <Ionicons name="search-outline" size={24} color={color} /> }} />
-        <Tabs.Screen name="settings" options={{ title: 'Settings', tabBarIcon: ({ color }) => <Ionicons name="settings-outline" size={24} color={color} /> }} />
+        {/* Dashboard - Always visible for staff and admin */}
+        <Tabs.Screen
+          name="index"
+          options={{
+            title: 'Dashboard',
+            tabBarIcon: ({ color }) => <Ionicons name="home-outline" size={24} color={color} />
+          }}
+        />
+
+        {/* Capture - Always visible for staff and admin */}
+        <Tabs.Screen
+          name="capture"
+          options={{
+            title: 'Capture',
+            tabBarIcon: ({ color }) => <Ionicons name="camera-outline" size={24} color={color} />
+          }}
+        />
+
+        {/* History - Always visible for staff and admin */}
+        <Tabs.Screen
+          name="history"
+          options={{
+            title: 'History',
+            tabBarIcon: ({ color }) => <Ionicons name="time-outline" size={24} color={color} />
+          }}
+        />
+
+        {/* Settings - Always visible for staff and admin */}
+        <Tabs.Screen
+          name="settings"
+          options={{
+            title: 'Settings',
+            tabBarIcon: ({ color }) => <Ionicons name="settings-outline" size={24} color={color} />
+          }}
+        />
+
+        {/* Assess - Hidden from navigation but still accessible programmatically */}
+        <Tabs.Screen
+          name="assess"
+          options={{
+            title: 'Assess',
+            tabBarIcon: ({ color }) => <Ionicons name="search-outline" size={24} color={color} />,
+            href: null // This hides the tab from the navigation bar
+          }}
+        />
       </Tabs>
     </StaffOrAdmin>
   );

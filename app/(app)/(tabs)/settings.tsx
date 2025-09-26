@@ -16,61 +16,44 @@ import { useAuth } from '@/lib/auth/AuthContext';
 import { FirestoreService } from '@/lib/firestore';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { StorageCalculationService, type FormattedStorageMetrics } from '@/lib/storageCalculation';
 
 export default function Settings() {
   const scheme = useColorScheme() ?? 'light';
   const [busy, setBusy] = React.useState<'export' | 'import' | null>(null);
   const { preferred, setPreferred } = useThemePreference();
-  const [counts, setCounts] = React.useState({ total: 0, sizeKB: 0 });
+  const [storageMetrics, setStorageMetrics] = React.useState<FormattedStorageMetrics | null>(null);
+  const [isCalculating, setIsCalculating] = React.useState(false);
+  const [calculationError, setCalculationError] = React.useState<string | null>(null);
   const { user, userProfile, signOut } = useAuth();
   const insets = useSafeAreaInsets();
 
-  const recalc = React.useCallback(async () => {
-    if (!user) return;
-    const rows = await FirestoreService.listAssessments(user.uid);
-    let bytes = 0;
-
-    const FS: any = FileSystem as any;
-    const doc = FS.documentDirectory as string | undefined;
-    const cache = FS.cacheDirectory as string | undefined;
-    const photoDirs = [doc ? doc + 'photos/' : null, cache ? cache + 'photos/' : null].filter(Boolean) as string[];
-    for (const dir of photoDirs) {
-      try {
-        const names = await FileSystem.readDirectoryAsync(dir);
-        for (const name of names) {
-          try {
-            const info = await FileSystem.getInfoAsync(dir + name, { size: true } as any);
-            if ((info as any).exists && typeof (info as any).size === 'number') bytes += (info as any).size as number;
-          } catch {}
-        }
-      } catch {}
+  const calculateStorageMetrics = React.useCallback(async () => {
+    if (!user) {
+      setStorageMetrics(null);
+      setCalculationError(null);
+      return;
     }
 
-    const dbCandidates = [
-      doc ? doc + 'SQLite/asset_audit.db' : null,
-      cache ? cache + 'SQLite/asset_audit.db' : null,
-    ].filter(Boolean) as string[];
-    for (const p of dbCandidates) {
-      try {
-        const info = await FileSystem.getInfoAsync(p, { size: true } as any);
-        if ((info as any).exists && typeof (info as any).size === 'number') bytes += (info as any).size as number;
-      } catch {}
+    setIsCalculating(true);
+    setCalculationError(null);
+
+    try {
+      console.log('Calculating Firebase storage metrics for user:', user.uid);
+      const metrics = await StorageCalculationService.getFormattedUserStorageMetrics(user.uid);
+      console.log('Storage metrics calculated:', metrics);
+      setStorageMetrics(metrics);
+    } catch (error) {
+      console.error('Error calculating storage metrics:', error);
+      setCalculationError(error instanceof Error ? error.message : 'Failed to calculate storage usage');
+      setStorageMetrics(null);
+    } finally {
+      setIsCalculating(false);
     }
+  }, [user]);
 
-    if (bytes === 0) {
-      for (const r of rows) {
-        try {
-          const info = await FileSystem.getInfoAsync(r.photo_uri, { size: true } as any);
-          if ((info as any).exists && typeof (info as any).size === 'number') bytes += (info as any).size as number;
-        } catch {}
-      }
-    }
-
-    setCounts({ total: rows.length, sizeKB: Math.ceil(bytes / 1024) });
-  }, []);
-
-  React.useEffect(() => { recalc(); }, [recalc]);
-  useFocusEffect(React.useCallback(() => { recalc(); }, [recalc]));
+  React.useEffect(() => { calculateStorageMetrics(); }, [calculateStorageMetrics]);
+  useFocusEffect(React.useCallback(() => { calculateStorageMetrics(); }, [calculateStorageMetrics]));
 
   const onExport = async () => {
     try { setBusy('export'); const path = await exportZip();
@@ -81,7 +64,7 @@ export default function Settings() {
 
   const onImport = async () => {
     try { setBusy('import'); const ok = await importZip();
-      if (ok) { Alert.alert('Import complete', 'Your data has been imported.'); await recalc(); }
+      if (ok) { Alert.alert('Import complete', 'Your data has been imported.'); await calculateStorageMetrics(); }
     } catch (e: any) { Alert.alert('Import failed', String(e?.message || e)); }
     finally { setBusy(null); }
   };
@@ -165,8 +148,67 @@ export default function Settings() {
       </Card>
 
       <Card>
-        <ThemedText style={styles.cardTitle}>Data Management</ThemedText>
-        <ThemedText style={{ marginBottom: 8 }}>Total Audits: {counts.total}   •   Storage: {counts.sizeKB} KB</ThemedText>
+        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
+          <Ionicons name="server-outline" size={18} color={Colors[scheme].text} style={{ marginRight: 6 }} />
+          <ThemedText style={styles.cardTitle}>Data Management</ThemedText>
+        </View>
+
+        {/* Storage Metrics Display */}
+        {isCalculating ? (
+          <View style={styles.loadingContainer}>
+            <ThemedText style={styles.loadingText}>Calculating storage usage...</ThemedText>
+          </View>
+        ) : calculationError ? (
+          <View style={styles.errorContainer}>
+            <ThemedText style={styles.errorText}>Error: {calculationError}</ThemedText>
+            <Button
+              title="Retry Calculation"
+              onPress={calculateStorageMetrics}
+              variant="secondary"
+              size="sm"
+            />
+          </View>
+        ) : storageMetrics ? (
+          <View style={styles.metricsContainer}>
+            <View style={styles.metricRow}>
+              <ThemedText style={styles.metricLabel}>Total Assessments:</ThemedText>
+              <ThemedText style={styles.metricValue}>{storageMetrics.assessmentCount}</ThemedText>
+            </View>
+            <View style={styles.metricRow}>
+              <ThemedText style={styles.metricLabel}>Images Stored:</ThemedText>
+              <ThemedText style={styles.metricValue}>{storageMetrics.imageCount}</ThemedText>
+            </View>
+            <View style={styles.metricRow}>
+              <ThemedText style={styles.metricLabel}>Firestore Data:</ThemedText>
+              <ThemedText style={styles.metricValue}>{storageMetrics.formattedFirestoreSize}</ThemedText>
+            </View>
+            <View style={styles.metricRow}>
+              <ThemedText style={styles.metricLabel}>Image Storage:</ThemedText>
+              <ThemedText style={styles.metricValue}>{storageMetrics.formattedStorageSize}</ThemedText>
+            </View>
+            <View style={[styles.metricRow, styles.totalRow]}>
+              <ThemedText style={styles.totalLabel}>Total Storage:</ThemedText>
+              <ThemedText style={styles.totalValue}>{storageMetrics.formattedTotalSize}</ThemedText>
+            </View>
+            <ThemedText style={styles.lastUpdated}>
+              Last updated: {new Date(storageMetrics.lastCalculated).toLocaleString()}
+            </ThemedText>
+          </View>
+        ) : (
+          <View style={styles.noDataContainer}>
+            <ThemedText style={styles.noDataText}>No storage data available</ThemedText>
+            <Button
+              title="Calculate Storage"
+              onPress={calculateStorageMetrics}
+              variant="secondary"
+              size="sm"
+            />
+          </View>
+        )}
+
+        <View style={{ height: 16 }} />
+
+        {/* Action Buttons */}
         <Button title={busy === 'export' ? 'Exporting' : 'Export Data (ZIP)'} onPress={onExport} disabled={!!busy} />
         <View style={{ height: 8 }} />
         <Button title={busy === 'import' ? 'Importing' : 'Import Data (ZIP)'} onPress={onImport} disabled={!!busy} variant="secondary" />
@@ -177,7 +219,7 @@ export default function Settings() {
             { text: 'Delete', style: 'destructive', onPress: async () => {
               if (user) {
                 await FirestoreService.clearUserData(user.uid);
-                await recalc();
+                await calculateStorageMetrics();
               }
             } },
           ]);
@@ -259,5 +301,84 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: '700',
     fontSize: 12,
+  },
+
+  // Storage metrics styles
+  loadingContainer: {
+    padding: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: Colors.light.background, // Will be overridden by theme
+    borderRadius: 8,
+    marginBottom: 8,
+  },
+  loadingText: {
+    fontSize: 14,
+    opacity: 0.8,
+  },
+  errorContainer: {
+    padding: 16,
+    backgroundColor: '#fee2e2', // Light red background
+    borderRadius: 8,
+    marginBottom: 8,
+  },
+  errorText: {
+    color: '#dc2626', // Red text
+    fontSize: 14,
+    marginBottom: 8,
+  },
+  noDataContainer: {
+    padding: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: Colors.light.background, // Will be overridden by theme
+    borderRadius: 8,
+    marginBottom: 8,
+  },
+  noDataText: {
+    fontSize: 14,
+    opacity: 0.8,
+    marginBottom: 8,
+  },
+  metricsContainer: {
+    backgroundColor: Colors.light.background, // Will be overridden by theme
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 8,
+  },
+  metricRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 4,
+  },
+  metricLabel: {
+    fontSize: 14,
+    opacity: 0.8,
+  },
+  metricValue: {
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  totalRow: {
+    borderTopWidth: 1,
+    borderTopColor: Colors.light.border, // Will be overridden by theme
+    marginTop: 8,
+    paddingTop: 8,
+  },
+  totalLabel: {
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  totalValue: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: Colors.light.tint, // Will be overridden by theme
+  },
+  lastUpdated: {
+    fontSize: 12,
+    opacity: 0.6,
+    textAlign: 'center',
+    marginTop: 8,
   },
 });

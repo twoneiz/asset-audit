@@ -59,7 +59,8 @@ export default function Review() {
         notes: params.notes || '',
       });
 
-      router.replace('/(app)/history');
+      // Navigate to History tab to show the newly created assessment
+      router.replace('/(app)/(tabs)/history');
     } catch (error) {
       console.error('Error saving assessment:', error);
 
