@@ -85,15 +85,15 @@ export default function AdminDashboard() {
 
       {/* Metrics Cards */}
       <View style={styles.metricsRow}>
-        <Card style={[styles.metricCard, { backgroundColor: Colors[scheme].tint + '20' }]}>
+        <Card style={{ ...styles.metricCard, backgroundColor: Colors[scheme].tint + '20' }}>
           <View style={styles.metricContent}>
             <Ionicons name="document-text-outline" size={24} color={Colors[scheme].tint} />
             <ThemedText style={styles.metricNumber}>{totalAssessments}</ThemedText>
             <ThemedText style={styles.metricLabel}>Total Assessments</ThemedText>
           </View>
         </Card>
-        
-        <Card style={[styles.metricCard, { backgroundColor: Colors[scheme].tint + '20' }]}>
+
+        <Card style={{ ...styles.metricCard, backgroundColor: Colors[scheme].tint + '20' }}>
           <View style={styles.metricContent}>
             <Ionicons name="today-outline" size={24} color={Colors[scheme].tint} />
             <ThemedText style={styles.metricNumber}>{todayAssessments}</ThemedText>
@@ -103,15 +103,15 @@ export default function AdminDashboard() {
       </View>
 
       <View style={styles.metricsRow}>
-        <Card style={[styles.metricCard, { backgroundColor: Colors[scheme].tint + '20' }]}>
+        <Card style={{ ...styles.metricCard, backgroundColor: Colors[scheme].tint + '20' }}>
           <View style={styles.metricContent}>
             <Ionicons name="people-outline" size={24} color={Colors[scheme].tint} />
             <ThemedText style={styles.metricNumber}>{totalUsers}</ThemedText>
             <ThemedText style={styles.metricLabel}>Total Users</ThemedText>
           </View>
         </Card>
-        
-        <Card style={[styles.metricCard, { backgroundColor: Colors[scheme].tint + '20' }]}>
+
+        <Card style={{ ...styles.metricCard, backgroundColor: Colors[scheme].tint + '20' }}>
           <View style={styles.metricContent}>
             <Ionicons name="checkmark-circle-outline" size={24} color={Colors[scheme].tint} />
             <ThemedText style={styles.metricNumber}>{activeUsers}</ThemedText>

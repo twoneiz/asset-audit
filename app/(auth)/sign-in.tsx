@@ -20,7 +20,9 @@ export default function SignIn() {
     setLoading(true);
     try {
       await signIn(email, password);
-      router.replace('/(app)/(tabs)');
+      // Note: RouteProtection will handle the role-based redirect automatically
+      // We don't need to manually redirect here as the AuthContext will trigger
+      // the RouteProtection logic which will redirect based on user role
     } catch (e: any) {
       Alert.alert('Error', e?.message ?? 'Sign-in failed');
     } finally { setLoading(false); }
