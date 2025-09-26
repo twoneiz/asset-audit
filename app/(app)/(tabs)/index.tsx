@@ -9,7 +9,7 @@ import { router } from 'expo-router';
 import React from 'react';
 import { StyleSheet, View, ScrollView, Image } from 'react-native';
 import { useAuth } from '@/lib/auth/AuthContext';
-import { DebugInfo } from '@/components/DebugInfo';
+// import { DebugInfo } from '@/components/DebugInfo';
 
 export default function Home() {
   const [total, setTotal] = React.useState(0);
@@ -19,19 +19,20 @@ export default function Home() {
   const { user, userProfile } = useAuth();
 
   const load = React.useCallback(async () => {
-    console.log('Staff Dashboard - Loading data...');
-    console.log('Staff Dashboard - User:', user?.uid);
-    console.log('Staff Dashboard - User Profile:', userProfile);
-    console.log('Staff Dashboard - User Role:', userProfile?.role);
+    // Debug logging (disabled for cleaner output)
+    // console.log('Staff Dashboard - Loading data...');
+    // console.log('Staff Dashboard - User:', user?.uid);
+    // console.log('Staff Dashboard - User Profile:', userProfile);
+    // console.log('Staff Dashboard - User Role:', userProfile?.role);
 
     if (!user) {
-      console.log('Staff Dashboard - No user, skipping load');
+      // console.log('Staff Dashboard - No user, skipping load');
       return;
     }
 
-    console.log('Staff Dashboard - Loading user assessments...');
+    // console.log('Staff Dashboard - Loading user assessments...');
     const rows = await FirestoreService.listAssessments(user.uid);
-    console.log('Staff Dashboard - Loaded assessments:', rows.length);
+    // console.log('Staff Dashboard - Loaded assessments:', rows.length);
     setTotal(rows.length);
     const start = new Date(); start.setHours(0,0,0,0);
     const end = new Date(); end.setHours(23,59,59,999);
@@ -44,7 +45,6 @@ export default function Home() {
 
   return (
     <ScrollView style={[styles.container, { backgroundColor: Colors[scheme].background }]}>
-      <DebugInfo />
       <Image source={require('@/assets/images/logo.png')} style={styles.logo} resizeMode="contain" />
 
       {/* User Role Indicator */}

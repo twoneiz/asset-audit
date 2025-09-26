@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Image, StyleSheet, View, Alert } from 'react-native';
 import { Button } from '@/components/ui/Button';
 import { ThemedText } from '@/components/themed-text';
-import { saveAssessmentWithDefect } from '@/lib/db';
+// Removed old SQLite import - now using FirestoreService
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { Colors } from '@/constants/theme';
 import { FirestoreService } from '@/lib/firestore';

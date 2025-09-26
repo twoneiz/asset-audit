@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/Button';
 import { ThemedText } from '@/components/themed-text';
 import { exportZip, importZip } from '@/lib/exportImport';
 import { useThemePreference } from '@/lib/theme-context';
-import { clearAllData, listAssessments } from '@/lib/db';
+// Removed old SQLite imports - now using FirestoreService
 import { Card } from '@/components/ui/Card';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { Colors } from '@/constants/theme';
@@ -13,6 +13,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import Constants from 'expo-constants';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '@/lib/auth/AuthContext';
+import { FirestoreService } from '@/lib/firestore';
 import { router } from 'expo-router';
 
 export default function Settings() {
@@ -23,7 +24,8 @@ export default function Settings() {
   const { user, userProfile, signOut } = useAuth();
 
   const recalc = React.useCallback(async () => {
-    const rows = await listAssessments();
+    if (!user) return;
+    const rows = await FirestoreService.listAssessments(user.uid);
     let bytes = 0;
 
     const FS: any = FileSystem as any;
@@ -152,10 +154,15 @@ export default function Settings() {
         <View style={{ height: 8 }} />
         <Button title={busy === 'import' ? 'Importing' : 'Import Data (ZIP)'} onPress={onImport} disabled={!!busy} variant="secondary" />
         <View style={{ height: 8 }} />
-        <Button title="Clear All Data" onPress={() => {
-          Alert.alert('Clear all data', 'This will remove all assessments and photos from this device.', [
+        <Button title="Clear My Data" onPress={() => {
+          Alert.alert('Clear my data', 'This will remove all your assessments and photos.', [
             { text: 'Cancel', style: 'cancel' },
-            { text: 'Delete', style: 'destructive', onPress: async () => { await clearAllData(); await recalc(); } },
+            { text: 'Delete', style: 'destructive', onPress: async () => {
+              if (user) {
+                await FirestoreService.clearUserData(user.uid);
+                await recalc();
+              }
+            } },
           ]);
         }} variant="danger" />
       </Card>

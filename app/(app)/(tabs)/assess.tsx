@@ -85,16 +85,17 @@ export default function Assess() {
   }, [photoUri]);
 
   const continueToReview = () => {
-    console.log('Navigating to review with params:', {
-      photoUri: photoUri ?? '',
-      lat: lat ?? '',
-      lon: lon ?? '',
-      category,
-      element,
-      condition: String(condition),
-      priority: String(priority),
-      notes
-    });
+    // Debug logging (disabled for cleaner output)
+    // console.log('Navigating to review with params:', {
+    //   photoUri: photoUri ?? '',
+    //   lat: lat ?? '',
+    //   lon: lon ?? '',
+    //   category,
+    //   element,
+    //   condition: String(condition),
+    //   priority: String(priority),
+    //   notes
+    // });
 
     router.push({
       pathname: '/(app)/review',

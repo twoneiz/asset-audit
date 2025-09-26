@@ -10,7 +10,7 @@ import React from 'react';
 import { StyleSheet, View, ScrollView, Image } from 'react-native';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { Ionicons } from '@expo/vector-icons';
-import { DebugInfo } from '@/components/DebugInfo';
+// import { DebugInfo } from '@/components/DebugInfo';
 
 export default function AdminDashboard() {
   const [totalAssessments, setTotalAssessments] = React.useState(0);
@@ -22,31 +22,32 @@ export default function AdminDashboard() {
   const { user, userProfile } = useAuth();
 
   const load = React.useCallback(async () => {
-    console.log('Admin Dashboard - Loading data...');
-    console.log('Admin Dashboard - User:', user?.uid);
-    console.log('Admin Dashboard - User Profile:', userProfile);
-    console.log('Admin Dashboard - User Role:', userProfile?.role);
+    // Debug logging (disabled for cleaner output)
+    // console.log('Admin Dashboard - Loading data...');
+    // console.log('Admin Dashboard - User:', user?.uid);
+    // console.log('Admin Dashboard - User Profile:', userProfile);
+    // console.log('Admin Dashboard - User Role:', userProfile?.role);
 
     if (!user) {
-      console.log('Admin Dashboard - No user, skipping load');
+      // console.log('Admin Dashboard - No user, skipping load');
       return;
     }
 
     if (!userProfile) {
-      console.log('Admin Dashboard - No user profile yet, skipping load');
+      // console.log('Admin Dashboard - No user profile yet, skipping load');
       return;
     }
 
     if (userProfile.role !== 'admin') {
-      console.log('Admin Dashboard - User is not admin, role:', userProfile.role);
+      // console.log('Admin Dashboard - User is not admin, role:', userProfile.role);
       return;
     }
 
     try {
-      console.log('Admin Dashboard - Loading all assessments...');
+      // console.log('Admin Dashboard - Loading all assessments...');
       // Load all assessments
       const allAssessments = await FirestoreService.listAllAssessments();
-      console.log('Admin Dashboard - Loaded assessments:', allAssessments.length);
+      // console.log('Admin Dashboard - Loaded assessments:', allAssessments.length);
       setTotalAssessments(allAssessments.length);
       
       // Calculate today's assessments
@@ -77,7 +78,6 @@ export default function AdminDashboard() {
 
   return (
     <ScrollView style={[styles.container, { backgroundColor: Colors[scheme].background }]}>
-      <DebugInfo />
       <View style={styles.header}>
         <ThemedText style={styles.welcomeText}>Welcome, Admin</ThemedText>
         <ThemedText style={styles.subtitle}>System Overview</ThemedText>

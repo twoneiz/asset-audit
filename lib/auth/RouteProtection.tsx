@@ -15,10 +15,10 @@ export function useRouteProtection() {
     const inAdminTabs = segments.length > 1 && segments[1] === '(admin-tabs)';
     const inStaffTabs = segments.length > 1 && segments[1] === '(tabs)';
 
-    // Debug logging
-    console.log('RouteProtection - Current segments:', segments);
-    console.log('RouteProtection - User role:', userProfile?.role);
-    console.log('RouteProtection - Route flags:', { inAuth, inApp, inAdminTabs, inStaffTabs });
+    // Debug logging (disabled for cleaner output)
+    // console.log('RouteProtection - Current segments:', segments);
+    // console.log('RouteProtection - User role:', userProfile?.role);
+    // console.log('RouteProtection - Route flags:', { inAuth, inApp, inAdminTabs, inStaffTabs });
 
     // Not authenticated - redirect to sign in
     if (!user && !inAuth) {
@@ -48,7 +48,7 @@ export function useRouteProtection() {
       // For now, redirect admin users to their admin dashboard to avoid confusion
       // TODO: Later we can allow admins to access staff routes if needed
       if (userProfile.role === 'admin' && inStaffTabs) {
-        console.log('RouteProtection - Admin user accessing staff routes, redirecting to admin dashboard');
+        // console.log('RouteProtection - Admin user accessing staff routes, redirecting to admin dashboard');
         router.replace('/(app)/(admin-tabs)');
         return;
       }

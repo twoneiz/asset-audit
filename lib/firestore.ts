@@ -217,4 +217,42 @@ export class FirestoreService {
       throw error;
     }
   }
+
+  // Clear all user data (for staff users - only their own data)
+  static async clearUserData(userId: string): Promise<void> {
+    try {
+      // Get all user's assessments
+      const assessments = await this.listAssessments(userId);
+
+      // Delete all assessments
+      const deletePromises = assessments.map(assessment =>
+        assessment.id ? this.deleteAssessment(assessment.id) : Promise.resolve()
+      );
+
+      await Promise.all(deletePromises);
+      console.log(`Cleared ${assessments.length} assessments for user ${userId}`);
+    } catch (error) {
+      console.error('Error clearing user data:', error);
+      throw error;
+    }
+  }
+
+  // Clear all system data (admin only)
+  static async clearAllSystemData(): Promise<void> {
+    try {
+      // Get all assessments
+      const assessments = await this.listAllAssessments();
+
+      // Delete all assessments
+      const deletePromises = assessments.map(assessment =>
+        assessment.id ? this.deleteAssessment(assessment.id) : Promise.resolve()
+      );
+
+      await Promise.all(deletePromises);
+      console.log(`Cleared ${assessments.length} total assessments from system`);
+    } catch (error) {
+      console.error('Error clearing all system data:', error);
+      throw error;
+    }
+  }
 }
