@@ -15,6 +15,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { FirestoreService } from '@/lib/firestore';
 import { router } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function Settings() {
   const scheme = useColorScheme() ?? 'light';
@@ -22,6 +23,7 @@ export default function Settings() {
   const { preferred, setPreferred } = useThemePreference();
   const [counts, setCounts] = React.useState({ total: 0, sizeKB: 0 });
   const { user, userProfile, signOut } = useAuth();
+  const insets = useSafeAreaInsets();
 
   const recalc = React.useCallback(async () => {
     if (!user) return;
@@ -107,8 +109,19 @@ export default function Settings() {
   };
 
   return (
-    <ScrollView style={{ backgroundColor: Colors[scheme].background }} contentContainerStyle={styles.container}>
-      <ThemedText type="title" style={{ marginBottom: 12 }}>Settings</ThemedText>
+    <View style={[styles.wrapper, { backgroundColor: Colors[scheme].background }]}>
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={[
+          styles.container,
+          {
+            paddingTop: Math.max(insets.top, 16),
+            paddingBottom: Math.max(insets.bottom, 16),
+          }
+        ]}
+        showsVerticalScrollIndicator={false}
+      >
+        <ThemedText type="title" style={styles.pageTitle}>Settings</ThemedText>
 
       {/* User Profile Section */}
       <Card>
@@ -117,19 +130,23 @@ export default function Settings() {
           <ThemedText style={styles.cardTitle}>User Profile</ThemedText>
         </View>
         <View style={styles.rowBetween}>
-          <ThemedText>Name</ThemedText>
-          <ThemedText style={{ opacity: 0.9 }}>{user?.displayName || 'Unknown'}</ThemedText>
+          <ThemedText style={styles.labelText}>Name</ThemedText>
+          <ThemedText style={styles.valueText} numberOfLines={2} ellipsizeMode="tail">
+            {user?.displayName || 'Unknown'}
+          </ThemedText>
         </View>
         <View style={styles.rowBetween}>
-          <ThemedText>Email</ThemedText>
-          <ThemedText style={{ opacity: 0.9 }}>{user?.email || 'Unknown'}</ThemedText>
+          <ThemedText style={styles.labelText}>Email</ThemedText>
+          <ThemedText style={styles.valueText} numberOfLines={1} ellipsizeMode="tail">
+            {user?.email || 'Unknown'}
+          </ThemedText>
         </View>
         <View style={styles.rowBetween}>
-          <ThemedText>Role</ThemedText>
+          <ThemedText style={styles.labelText}>Role</ThemedText>
           <View style={[styles.badge, {
             backgroundColor: userProfile?.role === 'admin' ? '#ff6b6b' : '#4ecdc4'
           }]}>
-            <ThemedText style={{ color: '#fff', fontWeight: '700' }}>
+            <ThemedText style={styles.badgeText}>
               {userProfile?.role?.toUpperCase() || 'UNKNOWN'}
             </ThemedText>
           </View>
@@ -173,26 +190,74 @@ export default function Settings() {
           <ThemedText style={styles.cardTitle}>About Asset Audit</ThemedText>
         </View>
         <View style={styles.rowBetween}>
-          <ThemedText>Version</ThemedText>
+          <ThemedText style={styles.labelText}>Version</ThemedText>
           <View style={[styles.badge, { backgroundColor: Colors[scheme].tint }]}>
-            <ThemedText style={{ color: '#fff', fontWeight: '700' }}>
+            <ThemedText style={styles.badgeText}>
               {Constants?.expoConfig?.version || (Constants as any)?.manifest?.version || Constants?.nativeAppVersion || '1.0.0'}
             </ThemedText>
           </View>
         </View>
         <View style={styles.rowBetween}>
-          <ThemedText>Platform</ThemedText>
-          <ThemedText style={{ opacity: 0.9 }}>
+          <ThemedText style={styles.labelText}>Platform</ThemedText>
+          <ThemedText style={styles.valueText}>
             {Platform.OS === 'web' ? 'Mobile Web App' : Platform.OS === 'ios' ? 'iOS App' : 'Android App'}
           </ThemedText>
         </View>
       </Card>
-    </ScrollView>
+      </ScrollView>
+    </View>
   );
 }
 const styles = StyleSheet.create({
-  container: { padding: 16, gap: 16 },
-  cardTitle: { fontWeight: '700', marginBottom: 8 },
-  rowBetween: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 8 },
-  badge: { paddingHorizontal: 8, paddingVertical: 2, borderRadius: 999 },
+  wrapper: {
+    flex: 1,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  container: {
+    padding: 16,
+    gap: 16,
+    flexGrow: 1,
+  },
+  pageTitle: {
+    marginBottom: 20,
+    textAlign: 'center',
+    // Ensure proper spacing and visibility
+    paddingHorizontal: 16,
+  },
+  cardTitle: {
+    fontWeight: '700',
+    marginBottom: 8
+  },
+  rowBetween: {
+    flexDirection: 'row',
+    alignItems: 'flex-start', // Changed from 'center' to handle multi-line text
+    justifyContent: 'space-between',
+    paddingVertical: 8,
+    minHeight: 32, // Ensure consistent row height
+  },
+  labelText: {
+    flex: 0,
+    minWidth: 60,
+    marginRight: 12,
+  },
+  valueText: {
+    flex: 1,
+    opacity: 0.9,
+    textAlign: 'right',
+    // Ensure text wraps properly within container
+    flexShrink: 1,
+  },
+  badge: {
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 999,
+    flexShrink: 0, // Prevent badge from shrinking
+  },
+  badgeText: {
+    color: '#fff',
+    fontWeight: '700',
+    fontSize: 12,
+  },
 });

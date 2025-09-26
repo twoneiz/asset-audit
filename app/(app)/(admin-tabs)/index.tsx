@@ -1,6 +1,7 @@
 import { ThemedText } from '@/components/themed-text';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
+import { Container, Column, Row, Grid } from '@/components/ui/Layout';
 import { Colors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { FirestoreService, type Assessment, type UserProfile } from '@/lib/firestore';
@@ -10,6 +11,7 @@ import React from 'react';
 import { StyleSheet, View, ScrollView, Image } from 'react-native';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { Ionicons } from '@expo/vector-icons';
+import { ResponsiveUtils, Typography, Spacing, DeviceType } from '@/constants/responsive';
 // import { DebugInfo } from '@/components/DebugInfo';
 
 export default function AdminDashboard() {
@@ -77,48 +79,93 @@ export default function AdminDashboard() {
   }, [load]));
 
   return (
-    <ScrollView style={[styles.container, { backgroundColor: Colors[scheme].background }]}>
-      <View style={styles.header}>
-        <ThemedText style={styles.welcomeText}>Welcome, Admin</ThemedText>
-        <ThemedText style={styles.subtitle}>System Overview</ThemedText>
-      </View>
+    <Container style={{ backgroundColor: Colors[scheme].background }}>
+      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+        <Column spacing="lg" style={styles.content}>
+          {/* Header */}
+          <Column spacing="xs" align="center" style={styles.header}>
+            <ThemedText style={styles.welcomeText}>Welcome, Admin</ThemedText>
+            <ThemedText style={styles.subtitle}>System Overview</ThemedText>
+          </Column>
 
-      {/* Metrics Cards */}
-      <View style={styles.metricsRow}>
-        <Card style={{ ...styles.metricCard, backgroundColor: Colors[scheme].tint + '20' }}>
-          <View style={styles.metricContent}>
-            <Ionicons name="document-text-outline" size={24} color={Colors[scheme].tint} />
-            <ThemedText style={styles.metricNumber}>{totalAssessments}</ThemedText>
-            <ThemedText style={styles.metricLabel}>Total Assessments</ThemedText>
-          </View>
-        </Card>
+          {/* Metrics Cards */}
+          <Grid columns={DeviceType.isPhone ? 2 : 4} spacing="md">
+            <Card
+              variant="elevated"
+              padding="md"
+              style={{
+                ...styles.metricCard,
+                backgroundColor: Colors[scheme].tint + '20',
+              }}
+            >
+              <Column spacing="sm" align="center">
+                <Ionicons
+                  name="document-text-outline"
+                  size={ResponsiveUtils.fontSize(24)}
+                  color={Colors[scheme].tint}
+                />
+                <ThemedText style={styles.metricNumber}>{totalAssessments}</ThemedText>
+                <ThemedText style={styles.metricLabel}>Total Assessments</ThemedText>
+              </Column>
+            </Card>
 
-        <Card style={{ ...styles.metricCard, backgroundColor: Colors[scheme].tint + '20' }}>
-          <View style={styles.metricContent}>
-            <Ionicons name="today-outline" size={24} color={Colors[scheme].tint} />
-            <ThemedText style={styles.metricNumber}>{todayAssessments}</ThemedText>
-            <ThemedText style={styles.metricLabel}>Today</ThemedText>
-          </View>
-        </Card>
-      </View>
+            <Card
+              variant="elevated"
+              padding="md"
+              style={{
+                ...styles.metricCard,
+                backgroundColor: Colors[scheme].tint + '20',
+              }}
+            >
+              <Column spacing="sm" align="center">
+                <Ionicons
+                  name="today-outline"
+                  size={ResponsiveUtils.fontSize(24)}
+                  color={Colors[scheme].tint}
+                />
+                <ThemedText style={styles.metricNumber}>{todayAssessments}</ThemedText>
+                <ThemedText style={styles.metricLabel}>Today</ThemedText>
+              </Column>
+            </Card>
 
-      <View style={styles.metricsRow}>
-        <Card style={{ ...styles.metricCard, backgroundColor: Colors[scheme].tint + '20' }}>
-          <View style={styles.metricContent}>
-            <Ionicons name="people-outline" size={24} color={Colors[scheme].tint} />
-            <ThemedText style={styles.metricNumber}>{totalUsers}</ThemedText>
-            <ThemedText style={styles.metricLabel}>Total Users</ThemedText>
-          </View>
-        </Card>
+            <Card
+              variant="elevated"
+              padding="md"
+              style={{
+                ...styles.metricCard,
+                backgroundColor: Colors[scheme].tint + '20',
+              }}
+            >
+              <Column spacing="sm" align="center">
+                <Ionicons
+                  name="people-outline"
+                  size={ResponsiveUtils.fontSize(24)}
+                  color={Colors[scheme].tint}
+                />
+                <ThemedText style={styles.metricNumber}>{totalUsers}</ThemedText>
+                <ThemedText style={styles.metricLabel}>Total Users</ThemedText>
+              </Column>
+            </Card>
 
-        <Card style={{ ...styles.metricCard, backgroundColor: Colors[scheme].tint + '20' }}>
-          <View style={styles.metricContent}>
-            <Ionicons name="checkmark-circle-outline" size={24} color={Colors[scheme].tint} />
-            <ThemedText style={styles.metricNumber}>{activeUsers}</ThemedText>
-            <ThemedText style={styles.metricLabel}>Active Users</ThemedText>
-          </View>
-        </Card>
-      </View>
+            <Card
+              variant="elevated"
+              padding="md"
+              style={{
+                ...styles.metricCard,
+                backgroundColor: Colors[scheme].tint + '20',
+              }}
+            >
+              <Column spacing="sm" align="center">
+                <Ionicons
+                  name="checkmark-circle-outline"
+                  size={ResponsiveUtils.fontSize(24)}
+                  color={Colors[scheme].tint}
+                />
+                <ThemedText style={styles.metricNumber}>{activeUsers}</ThemedText>
+                <ThemedText style={styles.metricLabel}>Active Users</ThemedText>
+              </Column>
+            </Card>
+          </Grid>
 
       {/* Quick Actions */}
       <Card>
@@ -176,87 +223,97 @@ export default function AdminDashboard() {
           />
         )}
       </Card>
-    </ScrollView>
+        </Column>
+      </ScrollView>
+    </Container>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { 
-    flex: 1, 
-    padding: 16 
+  scrollView: {
+    flex: 1,
+  },
+  content: {
+    paddingBottom: Spacing.xl,
   },
   header: {
-    marginBottom: 20,
+    marginBottom: Spacing.lg,
   },
   welcomeText: {
-    fontSize: 24,
+    fontSize: ResponsiveUtils.fontSize(Typography.responsive.heading),
     fontWeight: '700',
-    marginBottom: 4,
+    textAlign: 'center',
   },
   subtitle: {
-    fontSize: 16,
+    fontSize: ResponsiveUtils.fontSize(Typography.responsive.body),
     opacity: 0.7,
+    textAlign: 'center',
   },
-  title: { 
-    fontSize: 18, 
-    fontWeight: '600', 
-    marginBottom: 8 
-  },
-  metricsRow: { 
-    flexDirection: 'row', 
-    gap: 12, 
-    marginBottom: 16 
+  title: {
+    fontSize: ResponsiveUtils.fontSize(Typography.responsive.title),
+    fontWeight: '600',
   },
   metricCard: {
-    flex: 1,
-    padding: 16,
-  },
-  metricContent: {
-    alignItems: 'center',
+    minHeight: ResponsiveUtils.getResponsiveValue({
+      phone: 120,
+      tablet: 140,
+      desktop: 160,
+      default: 120,
+    }),
   },
   metricNumber: {
-    fontSize: 24,
+    fontSize: ResponsiveUtils.fontSize(Typography.responsive.heading),
     fontWeight: '700',
-    marginTop: 8,
-    marginBottom: 4,
+    textAlign: 'center',
   },
   metricLabel: {
-    fontSize: 12,
+    fontSize: ResponsiveUtils.fontSize(Typography.xs),
     opacity: 0.7,
     textAlign: 'center',
   },
   actionButtons: {
-    gap: 8,
+    gap: Spacing.sm,
   },
   actionButton: {
-    marginBottom: 8,
+    marginBottom: Spacing.sm,
   },
   assessmentItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 12,
-    paddingBottom: 12,
-    borderBottomWidth: 1,
+    marginBottom: Spacing.md,
+    paddingBottom: Spacing.md,
+    borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: '#00000010',
   },
   assessmentThumb: {
-    width: 48,
-    height: 48,
-    borderRadius: 8,
-    marginRight: 12,
+    width: ResponsiveUtils.getResponsiveValue({
+      phone: 48,
+      tablet: 56,
+      desktop: 64,
+      default: 48,
+    }),
+    height: ResponsiveUtils.getResponsiveValue({
+      phone: 48,
+      tablet: 56,
+      desktop: 64,
+      default: 48,
+    }),
+    borderRadius: ResponsiveUtils.getBorderRadius('sm'),
+    marginRight: Spacing.md,
   },
   assessmentInfo: {
     flex: 1,
   },
   assessmentTitle: {
+    fontSize: ResponsiveUtils.fontSize(Typography.base),
     fontWeight: '600',
     marginBottom: 2,
   },
   assessmentDate: {
-    fontSize: 12,
+    fontSize: ResponsiveUtils.fontSize(Typography.xs),
     opacity: 0.7,
   },
   viewButton: {
-    paddingHorizontal: 16,
+    paddingHorizontal: Spacing.md,
   },
 });

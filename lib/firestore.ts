@@ -1,4 +1,4 @@
-import { collection, addDoc, getDocs, doc, getDoc, updateDoc, deleteDoc, query, where, orderBy, setDoc } from 'firebase/firestore';
+import { collection, getDocs, doc, getDoc, updateDoc, deleteDoc, query, where, orderBy, setDoc } from 'firebase/firestore';
 import { db } from '@/config/firebase.config';
 import { ImageUploadService } from './imageUpload';
 
@@ -15,7 +15,7 @@ export type UserProfile = {
 };
 
 export type Assessment = {
-  id?: string;
+  id: string; // Now required since we always generate custom IDs
   userId: string;
   created_at: number;
   latitude: number | null;
@@ -94,11 +94,81 @@ export class FirestoreService {
     }
   }
 
+  // Helper function to pad numbers with leading zeros
+  private static pad2(n: number): string {
+    return String(n).padStart(2, '0');
+  }
+
+  // Helper function to pad sequence numbers with leading zeros (5 digits)
+  private static pad5(n: number): string {
+    return String(n).padStart(5, '0');
+  }
+
+  // Generate custom assessment ID in format: ddmmyyyy-00001
+  private static async generateCustomAssessmentId(): Promise<string> {
+    try {
+      const now = new Date();
+      const day = this.pad2(now.getDate());
+      const month = this.pad2(now.getMonth() + 1);
+      const year = now.getFullYear();
+      const prefix = `${day}${month}${year}-`;
+
+      console.log('Generating custom ID with prefix:', prefix);
+
+      // Get all assessments and filter client-side (since we can't query by document ID)
+      const q = query(collection(db, 'assessments'));
+      const querySnapshot = await getDocs(q);
+
+      console.log('Total assessments found:', querySnapshot.size);
+
+      let maxSequence = 0;
+
+      // Filter and find the highest sequence for today's prefix
+      querySnapshot.docs.forEach(doc => {
+        const docId = doc.id;
+        if (docId.startsWith(prefix)) {
+          console.log('Found matching assessment ID:', docId);
+          const sequencePart = docId.split('-')[1];
+          if (sequencePart) {
+            const sequenceNum = parseInt(sequencePart, 10);
+            if (!isNaN(sequenceNum)) {
+              maxSequence = Math.max(maxSequence, sequenceNum);
+              console.log('Current max sequence:', maxSequence);
+            }
+          }
+        }
+      });
+
+      const nextSequence = maxSequence + 1;
+      const customId = `${prefix}${this.pad5(nextSequence)}`;
+
+      console.log('Generated custom ID:', customId);
+      return customId;
+
+    } catch (error) {
+      console.error('Error generating custom assessment ID:', error);
+      // Fallback to timestamp-based ID if custom generation fails
+      const now = new Date();
+      const day = this.pad2(now.getDate());
+      const month = this.pad2(now.getMonth() + 1);
+      const year = now.getFullYear();
+      const timestamp = Date.now();
+      const fallbackId = `${day}${month}${year}-${timestamp}`;
+      console.log('Using fallback ID:', fallbackId);
+      return fallbackId;
+    }
+  }
+
   // Assessment Management
   static async createAssessment(assessment: Omit<Assessment, 'id'>) {
     try {
-      const docRef = await addDoc(collection(db, 'assessments'), assessment);
-      return { ...assessment, id: docRef.id };
+      const customId = await this.generateCustomAssessmentId();
+      const assessmentWithId = { ...assessment, id: customId };
+
+      // Use setDoc with custom ID instead of addDoc
+      await setDoc(doc(db, 'assessments', customId), assessmentWithId);
+
+      return assessmentWithId;
     } catch (error) {
       console.error('Error creating assessment:', error);
       throw error;
@@ -107,25 +177,34 @@ export class FirestoreService {
 
   static async createAssessmentWithImageUpload(assessmentData: Omit<Assessment, 'id'>) {
     try {
-      // Generate a temporary ID for the assessment
-      const tempId = Date.now().toString() + Math.random().toString(36).substring(2, 11);
+      console.log('Starting assessment creation with image upload...');
 
-      // Upload the image to Firebase Storage
+      // Generate custom assessment ID first
+      const customId = await this.generateCustomAssessmentId();
+      console.log('Generated custom ID for assessment:', customId);
+
+      // Upload the image to Firebase Storage using the custom ID
+      console.log('Uploading image to Firebase Storage...');
       const downloadURL = await ImageUploadService.uploadImageWithRetry(
         assessmentData.photo_uri,
         assessmentData.userId,
-        tempId
+        customId
       );
+      console.log('Image uploaded successfully, URL:', downloadURL);
 
-      // Create the assessment with the Firebase Storage URL
+      // Create the assessment with the Firebase Storage URL and custom ID
       const assessmentWithStorageUrl = {
         ...assessmentData,
+        id: customId,
         photo_uri: downloadURL
       };
 
-      const docRef = await addDoc(collection(db, 'assessments'), assessmentWithStorageUrl);
+      console.log('Creating Firestore document with ID:', customId);
+      // Use setDoc with custom ID instead of addDoc
+      await setDoc(doc(db, 'assessments', customId), assessmentWithStorageUrl);
+      console.log('Assessment created successfully in Firestore');
 
-      return { ...assessmentWithStorageUrl, id: docRef.id };
+      return assessmentWithStorageUrl;
     } catch (error) {
       console.error('Error creating assessment with image upload:', error);
 
@@ -254,5 +333,13 @@ export class FirestoreService {
       console.error('Error clearing all system data:', error);
       throw error;
     }
+  }
+
+  // Test function to verify custom ID generation (for debugging)
+  static async testCustomIdGeneration(): Promise<string> {
+    console.log('Testing custom ID generation...');
+    const testId = await this.generateCustomAssessmentId();
+    console.log('Test ID generated:', testId);
+    return testId;
   }
 }
