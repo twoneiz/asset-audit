@@ -15,7 +15,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { router } from 'expo-router';
 
-export default function Settings() {
+export default function AdminSettings() {
   const scheme = useColorScheme() ?? 'light';
   const [busy, setBusy] = React.useState<'export' | 'import' | null>(null);
   const { preferred, setPreferred } = useThemePreference();
@@ -42,31 +42,12 @@ export default function Settings() {
       } catch {}
     }
 
-    const dbCandidates = [
-      doc ? doc + 'SQLite/asset_audit.db' : null,
-      cache ? cache + 'SQLite/asset_audit.db' : null,
-    ].filter(Boolean) as string[];
-    for (const p of dbCandidates) {
-      try {
-        const info = await FileSystem.getInfoAsync(p, { size: true } as any);
-        if ((info as any).exists && typeof (info as any).size === 'number') bytes += (info as any).size as number;
-      } catch {}
-    }
-
-    if (bytes === 0) {
-      for (const r of rows) {
-        try {
-          const info = await FileSystem.getInfoAsync(r.photo_uri, { size: true } as any);
-          if ((info as any).exists && typeof (info as any).size === 'number') bytes += (info as any).size as number;
-        } catch {}
-      }
-    }
-
-    setCounts({ total: rows.length, sizeKB: Math.ceil(bytes / 1024) });
+    setCounts({ total: rows.length, sizeKB: Math.round(bytes / 1024) });
   }, []);
 
-  React.useEffect(() => { recalc(); }, [recalc]);
-  useFocusEffect(React.useCallback(() => { recalc(); }, [recalc]));
+  useFocusEffect(React.useCallback(() => {
+    recalc();
+  }, [recalc]));
 
   const onExport = async () => {
     try { setBusy('export'); const path = await exportZip();
@@ -88,9 +69,9 @@ export default function Settings() {
       'Are you sure you want to sign out?',
       [
         { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Sign Out',
-          style: 'destructive',
+        { 
+          text: 'Sign Out', 
+          style: 'destructive', 
           onPress: async () => {
             try {
               await signOut();
@@ -106,13 +87,13 @@ export default function Settings() {
 
   return (
     <ScrollView style={{ backgroundColor: Colors[scheme].background }} contentContainerStyle={styles.container}>
-      <ThemedText type="title" style={{ marginBottom: 12 }}>Settings</ThemedText>
+      <ThemedText type="title" style={{ marginBottom: 12 }}>Admin Settings</ThemedText>
 
-      {/* User Profile Section */}
+      {/* Admin Profile Section */}
       <Card>
         <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
-          <Ionicons name="person-circle-outline" size={18} color={Colors[scheme].text} style={{ marginRight: 6 }} />
-          <ThemedText style={styles.cardTitle}>User Profile</ThemedText>
+          <Ionicons name="shield-checkmark-outline" size={18} color={Colors[scheme].text} style={{ marginRight: 6 }} />
+          <ThemedText style={styles.cardTitle}>Admin Profile</ThemedText>
         </View>
         <View style={styles.rowBetween}>
           <ThemedText>Name</ThemedText>
@@ -124,18 +105,36 @@ export default function Settings() {
         </View>
         <View style={styles.rowBetween}>
           <ThemedText>Role</ThemedText>
-          <View style={[styles.badge, {
-            backgroundColor: userProfile?.role === 'admin' ? '#ff6b6b' : '#4ecdc4'
-          }]}>
-            <ThemedText style={{ color: '#fff', fontWeight: '700' }}>
-              {userProfile?.role?.toUpperCase() || 'UNKNOWN'}
-            </ThemedText>
+          <View style={[styles.badge, { backgroundColor: '#ff6b6b' }]}>
+            <ThemedText style={{ color: '#fff', fontWeight: '700' }}>ADMIN</ThemedText>
           </View>
         </View>
         <View style={{ height: 12 }} />
         <Button title="Sign Out" onPress={handleSignOut} variant="danger" />
       </Card>
 
+      {/* Quick Admin Actions */}
+      <Card>
+        <ThemedText style={styles.cardTitle}>Quick Actions</ThemedText>
+        <View style={{ gap: 8 }}>
+          <Button 
+            title="View All Assessments" 
+            onPress={() => router.push('/(app)/(admin-tabs)/all-assessments')} 
+          />
+          <Button 
+            title="Manage Users" 
+            onPress={() => router.push('/(app)/(admin-tabs)/users')} 
+            variant="secondary"
+          />
+          <Button 
+            title="Admin Dashboard" 
+            onPress={() => router.push('/(app)/(admin-tabs)/')} 
+            variant="secondary"
+          />
+        </View>
+      </Card>
+
+      {/* Appearance */}
       <Card>
         <ThemedText style={styles.cardTitle}>Appearance</ThemedText>
         <View style={{ gap: 8 }}>
@@ -145,6 +144,7 @@ export default function Settings() {
         </View>
       </Card>
 
+      {/* Data Management */}
       <Card>
         <ThemedText style={styles.cardTitle}>Data Management</ThemedText>
         <ThemedText style={{ marginBottom: 8 }}>Total Audits: {counts.total}   •   Storage: {counts.sizeKB} KB</ThemedText>
@@ -160,6 +160,7 @@ export default function Settings() {
         }} variant="danger" />
       </Card>
 
+      {/* About */}
       <Card>
         <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
           <Ionicons name="information-circle-outline" size={18} color={Colors[scheme].text} style={{ marginRight: 6 }} />
@@ -183,6 +184,7 @@ export default function Settings() {
     </ScrollView>
   );
 }
+
 const styles = StyleSheet.create({
   container: { padding: 16, gap: 16 },
   cardTitle: { fontWeight: '700', marginBottom: 8 },

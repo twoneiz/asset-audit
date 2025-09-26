@@ -14,6 +14,7 @@ export default function AppStackLayout() {
       }}
     >
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+      <Stack.Screen name="(admin-tabs)" options={{ headerShown: false }} />
       <Stack.Screen name="history/index" options={{ title: 'History' }} />
       <Stack.Screen name="history/[id]" options={{ title: 'Assessment' }} />
       <Stack.Screen name="review" options={{ title: 'Review Summary' }} />

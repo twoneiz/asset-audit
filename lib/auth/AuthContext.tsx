@@ -8,25 +8,47 @@ import {
   onAuthStateChanged,
   User
 } from 'firebase/auth';
+import { FirestoreService, UserProfile, UserRole } from '../firestore';
 
 type AuthContextType = {
   user: User | null;
+  userProfile: UserProfile | null;
   loading: boolean;
   initializing: boolean;
   signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
-  signUp: (email: string, password: string, displayName: string) => Promise<void>;
+  signUp: (email: string, password: string, displayName: string, role?: UserRole) => Promise<void>;
+  refreshUserProfile: () => Promise<void>;
+  hasRole: (role: UserRole) => boolean;
+  isAdmin: () => boolean;
+  isStaff: () => boolean;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const loadUserProfile = async (userId: string) => {
+    try {
+      const profile = await FirestoreService.getUserProfile(userId);
+      setUserProfile(profile);
+    } catch (error) {
+      console.error('Error loading user profile:', error);
+      setUserProfile(null);
+    }
+  };
+
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user: User | null) => {
+    const unsubscribe = onAuthStateChanged(auth, async (user: User | null) => {
       setUser(user);
+      if (user) {
+        await loadUserProfile(user.uid);
+      } else {
+        setUserProfile(null);
+      }
       setLoading(false);
     });
     return unsubscribe;
@@ -48,24 +70,54 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const signUpHandler = async (email: string, password: string, displayName: string) => {
+  const signUpHandler = async (email: string, password: string, displayName: string, role: UserRole = 'staff') => {
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       await updateProfile(userCredential.user, { displayName });
-      // Don't return anything to match the Promise<void> type
+
+      // Create user profile in Firestore
+      await FirestoreService.createUserProfile(
+        userCredential.user.uid,
+        email,
+        displayName,
+        role
+      );
     } catch (error) {
       throw error;
     }
   };
 
+  const refreshUserProfile = async () => {
+    if (user) {
+      await loadUserProfile(user.uid);
+    }
+  };
+
+  const hasRole = (role: UserRole): boolean => {
+    return userProfile?.role === role;
+  };
+
+  const isAdmin = (): boolean => {
+    return userProfile?.role === 'admin';
+  };
+
+  const isStaff = (): boolean => {
+    return userProfile?.role === 'staff';
+  };
+
   return (
     <AuthContext.Provider value={{
       user,
+      userProfile,
       loading,
       initializing: loading,
       signIn: signInHandler,
       signOut: signOutHandler,
       signUp: signUpHandler,
+      refreshUserProfile,
+      hasRole,
+      isAdmin,
+      isStaff,
     }}>
       {children}
     </AuthContext.Provider>

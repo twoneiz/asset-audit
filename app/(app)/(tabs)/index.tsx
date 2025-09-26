@@ -9,17 +9,29 @@ import { router } from 'expo-router';
 import React from 'react';
 import { StyleSheet, View, ScrollView, Image } from 'react-native';
 import { useAuth } from '@/lib/auth/AuthContext';
+import { DebugInfo } from '@/components/DebugInfo';
 
 export default function Home() {
   const [total, setTotal] = React.useState(0);
   const [today, setToday] = React.useState(0);
   const [recent, setRecent] = React.useState<Assessment[]>([]);
   const scheme = useColorScheme() ?? 'light';
-  const { user } = useAuth();
+  const { user, userProfile } = useAuth();
 
   const load = React.useCallback(async () => {
-    if (!user) return;
+    console.log('Staff Dashboard - Loading data...');
+    console.log('Staff Dashboard - User:', user?.uid);
+    console.log('Staff Dashboard - User Profile:', userProfile);
+    console.log('Staff Dashboard - User Role:', userProfile?.role);
+
+    if (!user) {
+      console.log('Staff Dashboard - No user, skipping load');
+      return;
+    }
+
+    console.log('Staff Dashboard - Loading user assessments...');
     const rows = await FirestoreService.listAssessments(user.uid);
+    console.log('Staff Dashboard - Loaded assessments:', rows.length);
     setTotal(rows.length);
     const start = new Date(); start.setHours(0,0,0,0);
     const end = new Date(); end.setHours(23,59,59,999);
@@ -32,7 +44,18 @@ export default function Home() {
 
   return (
     <ScrollView style={[styles.container, { backgroundColor: Colors[scheme].background }]}>
+      <DebugInfo />
       <Image source={require('@/assets/images/logo.png')} style={styles.logo} resizeMode="contain" />
+
+      {/* User Role Indicator */}
+      {userProfile && (
+        <View style={[styles.roleIndicator, { backgroundColor: Colors[scheme].tint + '20' }]}>
+          <ThemedText style={styles.roleText}>
+            Welcome, {user?.displayName} ({userProfile.role.toUpperCase()})
+          </ThemedText>
+        </View>
+      )}
+
       <Card style={styles.metricsRow}>
         <View style={{ flex: 1, alignItems: 'center', padding: 12 }}>
           <ThemedText style={styles.title}>{total}</ThemedText>
@@ -77,4 +100,14 @@ const styles = StyleSheet.create({
   title:{ fontSize:18, fontWeight:'600', marginBottom:8 },
   logo:{ width:180, height:40, alignSelf:'center', marginBottom:16 },
   metricsRow:{ flexDirection:'row', alignItems:'stretch', marginBottom:16 },
+  roleIndicator: {
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 16,
+    alignItems: 'center',
+  },
+  roleText: {
+    fontSize: 14,
+    fontWeight: '600',
+  },
 });

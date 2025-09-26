@@ -8,6 +8,7 @@ import { ThemedText } from '@/components/themed-text';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { Colors } from '@/constants/theme';
 import { Ionicons } from '@expo/vector-icons';
+import { StaffOrAdmin } from '@/lib/auth/RoleGuard';
 
 const ELEMENTS: Record<string, string[]> = {
   Civil: ['Roof', 'External wall', 'Internal wall', 'Floor', 'Ceiling', 'Doors/Windows'],
@@ -84,6 +85,17 @@ export default function Assess() {
   }, [photoUri]);
 
   const continueToReview = () => {
+    console.log('Navigating to review with params:', {
+      photoUri: photoUri ?? '',
+      lat: lat ?? '',
+      lon: lon ?? '',
+      category,
+      element,
+      condition: String(condition),
+      priority: String(priority),
+      notes
+    });
+
     router.push({
       pathname: '/(app)/review',
       params: { photoUri: photoUri ?? '', lat: lat ?? '', lon: lon ?? '', category, element, condition: String(condition), priority: String(priority), notes },
@@ -96,7 +108,8 @@ export default function Assess() {
   const [notesY, setNotesY] = useState(0);
 
   return (
-    <>
+    <StaffOrAdmin>
+      <>
       <Stack.Screen options={{ title: 'Assess', headerTitle: 'Assess' }} />
       <KeyboardAvoidingView style={{ flex: 1, backgroundColor: Colors[scheme].background }} behavior={Platform.OS === 'ios' ? 'padding' : undefined} keyboardVerticalOffset={headerHeight}>
         <View style={{ flex: 1 }}>
@@ -190,13 +203,14 @@ export default function Assess() {
 
           <View style={[styles.fabBar, { backgroundColor: '#3261ceff' }]}>
             <Pressable onPress={continueToReview} style={styles.fabButton}>
-              <ThemedText style={{ color: '#fff', fontWeight: '700' }}>Continue Assessment</ThemedText>
+              <ThemedText style={{ color: '#fff', fontWeight: '700' }}>Continue to Review</ThemedText>
               <Ionicons name="arrow-forward" size={18} color="#fff" style={{ marginLeft: 8 }} />
             </Pressable>
           </View>
         </View>
       </KeyboardAvoidingView>
     </>
+    </StaffOrAdmin>
   );
 }
 const styles = StyleSheet.create({
