@@ -2,7 +2,8 @@ import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
 import * as DocumentPicker from 'expo-document-picker';
 import JSZip from 'jszip';
-import { getAssessmentDetails, listAssessments, upsertAssessmentWithDefectFromImport } from './db';
+// TODO: Update export/import to work with Firestore instead of SQLite
+// import { getAssessmentDetails, listAssessments, upsertAssessmentWithDefectFromImport } from './db';
 
 const photosDir = FileSystem.documentDirectory! + 'photos/';
 const dbPath = FileSystem.documentDirectory! + 'SQLite/asset_audit.db';
@@ -23,6 +24,7 @@ async function fileExists(uri: string) {
 }
 
 export async function exportZip() {
+  throw new Error('Export functionality is temporarily disabled. The app has been migrated from SQLite to Firestore. Export/import features will be updated in a future version.');
   const rows = await listAssessments();
   const zip = new JSZip();
 
@@ -96,6 +98,7 @@ function parseCsv(text: string) {
 }
 
 export async function importZip() {
+  throw new Error('Import functionality is temporarily disabled. The app has been migrated from SQLite to Firestore. Export/import features will be updated in a future version.');
   const pick = await DocumentPicker.getDocumentAsync({ type: 'application/zip' });
   if (pick.canceled || !pick.assets?.length) return false;
   const uri = pick.assets[0].uri;

@@ -4,9 +4,11 @@ import React, { useState } from 'react';
 import { ThemedText } from '@/components/themed-text';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
+import { Container, Column } from '@/components/ui/Layout';
 import { Colors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useAuth } from '@/lib/auth/AuthContext';
+import { ResponsiveUtils, Typography, PlatformType, Spacing, DeviceType } from '@/constants/responsive';
 
 export default function SignIn() {
   const [email, setEmail] = useState('');
@@ -20,7 +22,9 @@ export default function SignIn() {
     setLoading(true);
     try {
       await signIn(email, password);
-      router.replace('/(app)/(tabs)');
+      // Note: RouteProtection will handle the role-based redirect automatically
+      // We don't need to manually redirect here as the AuthContext will trigger
+      // the RouteProtection logic which will redirect based on user role
     } catch (e: any) {
       Alert.alert('Error', e?.message ?? 'Sign-in failed');
     } finally { setLoading(false); }
@@ -28,28 +32,111 @@ export default function SignIn() {
 
   return (
     <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      behavior={PlatformType.isIOS ? 'padding' : 'height'}
       style={[styles.container, { backgroundColor: Colors[scheme].background }]}
     >
-      <View style={styles.form}>
-        <ThemedText style={styles.title}>Asset Audit</ThemedText>
-        <ThemedText style={styles.subtitle}>Sign in to continue</ThemedText>
+      <Container center maxWidth padding="lg" style={styles.containerInner}>
+        <Column spacing="lg" align="center" justify="center" style={styles.form}>
+          <Column spacing="sm" align="center">
+            <ThemedText style={styles.title}>Asset Audit</ThemedText>
+            <ThemedText style={styles.subtitle}>Sign in to continue</ThemedText>
+          </Column>
 
-        <Input label="Email" value={email} onChangeText={setEmail}
-               keyboardType="email-address" autoCapitalize="none" autoComplete="email" />
-        <Input label="Password" value={password} onChangeText={setPassword}
-               secureTextEntry autoComplete="password" />
+          <Column spacing="md" style={styles.inputContainer}>
+            <Input
+              label="Email"
+              value={email}
+              onChangeText={setEmail}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              autoComplete="email"
+              required
+              accessibilityLabel="Email address"
+              accessibilityHint="Enter your email address to sign in"
+            />
+            <Input
+              label="Password"
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry
+              autoComplete="password"
+              required
+              accessibilityLabel="Password"
+              accessibilityHint="Enter your password to sign in"
+            />
+          </Column>
 
-        <Button title="Sign In" onPress={handleSignIn} disabled={loading} style={styles.button} />
-        <Button title="Create New Account" onPress={() => router.push('/(auth)/sign-up')} variant="secondary" />
-      </View>
+          <Column spacing="sm" style={styles.buttonContainer}>
+            <Button
+              title={loading ? "Signing In..." : "Sign In"}
+              onPress={handleSignIn}
+              disabled={loading}
+              fullWidth
+              size="lg"
+              accessibilityLabel="Sign in button"
+              accessibilityHint="Tap to sign in with your credentials"
+            />
+            <Button
+              title="Create New Account"
+              onPress={() => router.push('/(auth)/sign-up')}
+              variant="secondary"
+              fullWidth
+              accessibilityLabel="Create account button"
+              accessibilityHint="Tap to navigate to account creation"
+            />
+          </Column>
+        </Column>
+      </Container>
     </KeyboardAvoidingView>
   );
 }
 const styles = StyleSheet.create({
-  container:{ flex:1, padding:16 },
-  form:{ flex:1, justifyContent:'center', maxWidth:400, width:'100%', alignSelf:'center', gap:16 },
-  title:{ fontSize:32, fontWeight:'bold', textAlign:'center' },
-  subtitle:{ fontSize:16, opacity:0.7, textAlign:'center', marginBottom:16 },
-  button:{ marginTop:8 },
+  container: {
+    flex: 1,
+  },
+  containerInner: {
+    flex: 1,
+    justifyContent: 'center',
+  },
+  form: {
+    flex: 1,
+    maxWidth: ResponsiveUtils.getResponsiveValue({
+      phone: '100%',
+      tablet: 400,
+      desktop: 400,
+      default: '100%',
+    }),
+    width: '100%',
+  },
+  title: {
+    fontSize: ResponsiveUtils.getResponsiveValue({
+      phone: ResponsiveUtils.fontSize(Typography.responsive.heading),
+      tablet: ResponsiveUtils.fontSize(Typography.responsive.title),
+      desktop: ResponsiveUtils.fontSize(Typography.responsive.title),
+      default: ResponsiveUtils.fontSize(Typography.responsive.heading),
+    }),
+    fontWeight: 'bold',
+    textAlign: 'center',
+    lineHeight: ResponsiveUtils.getResponsiveValue({
+      phone: ResponsiveUtils.fontSize(Typography.responsive.heading) * 1.2,
+      tablet: ResponsiveUtils.fontSize(Typography.responsive.title) * 1.2,
+      desktop: ResponsiveUtils.fontSize(Typography.responsive.title) * 1.2,
+      default: ResponsiveUtils.fontSize(Typography.responsive.heading) * 1.2,
+    }),
+    // Ensure text doesn't overflow container
+    flexShrink: 1,
+    maxWidth: '100%',
+  },
+  subtitle: {
+    fontSize: ResponsiveUtils.fontSize(Typography.responsive.subtitle),
+    opacity: 0.7,
+    textAlign: 'center',
+  },
+  inputContainer: {
+    width: '100%',
+  },
+  buttonContainer: {
+    width: '100%',
+    marginTop: Spacing.md,
+  },
 });
