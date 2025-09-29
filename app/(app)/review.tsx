@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Image, StyleSheet, View, Alert } from 'react-native';
 import { Button } from '@/components/ui/Button';
 import { ThemedText } from '@/components/themed-text';
-import { saveAssessmentWithDefect } from '@/lib/db';
+// Removed old SQLite import - now using FirestoreService
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { Colors } from '@/constants/theme';
 import { FirestoreService } from '@/lib/firestore';
@@ -59,7 +59,8 @@ export default function Review() {
         notes: params.notes || '',
       });
 
-      router.replace('/(app)/history');
+      // Navigate to History tab to show the newly created assessment
+      router.replace('/(app)/(tabs)/history');
     } catch (error) {
       console.error('Error saving assessment:', error);
 
