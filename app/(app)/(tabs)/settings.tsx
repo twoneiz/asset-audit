@@ -28,6 +28,142 @@ export default function Settings() {
   const { user, userProfile, signOut } = useAuth();
   const insets = useSafeAreaInsets();
 
+  // Create dynamic styles based on current color scheme
+  const createStyles = (scheme: 'light' | 'dark') => StyleSheet.create({
+    wrapper: {
+      flex: 1,
+    },
+    scrollView: {
+      flex: 1,
+    },
+    container: {
+      padding: 16,
+      gap: 16,
+      flexGrow: 1,
+    },
+    pageTitle: {
+      marginBottom: 20,
+      textAlign: 'center',
+      // Ensure proper spacing and visibility
+      paddingHorizontal: 16,
+    },
+    cardTitle: {
+      fontWeight: '700',
+      marginBottom: 8
+    },
+    rowBetween: {
+      flexDirection: 'row',
+      alignItems: 'flex-start', // Changed from 'center' to handle multi-line text
+      justifyContent: 'space-between',
+      paddingVertical: 8,
+      minHeight: 32, // Ensure consistent row height
+    },
+    labelText: {
+      flex: 0,
+      minWidth: 60,
+      marginRight: 12,
+    },
+    valueText: {
+      flex: 1,
+      opacity: 0.9,
+      textAlign: 'right',
+      // Ensure text wraps properly within container
+      flexShrink: 1,
+    },
+    badge: {
+      paddingHorizontal: 8,
+      paddingVertical: 2,
+      borderRadius: 999,
+      flexShrink: 0, // Prevent badge from shrinking
+    },
+    badgeText: {
+      color: '#fff',
+      fontWeight: '700',
+      fontSize: 12,
+    },
+
+    // Storage metrics styles - now properly themed
+    loadingContainer: {
+      padding: 16,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: Colors[scheme].card,
+      borderRadius: 8,
+      marginBottom: 8,
+    },
+    loadingText: {
+      fontSize: 14,
+      opacity: 0.8,
+    },
+    errorContainer: {
+      padding: 16,
+      backgroundColor: scheme === 'dark' ? '#7f1d1d' : '#fee2e2', // Dark red for dark mode, light red for light mode
+      borderRadius: 8,
+      marginBottom: 8,
+    },
+    errorText: {
+      color: scheme === 'dark' ? '#fca5a5' : '#dc2626', // Light red text for dark mode, dark red for light mode
+      fontSize: 14,
+      marginBottom: 8,
+    },
+    noDataContainer: {
+      padding: 16,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: Colors[scheme].card,
+      borderRadius: 8,
+      marginBottom: 8,
+    },
+    noDataText: {
+      fontSize: 14,
+      opacity: 0.8,
+      marginBottom: 8,
+    },
+    metricsContainer: {
+      backgroundColor: Colors[scheme].card,
+      borderRadius: 8,
+      padding: 12,
+      marginBottom: 8,
+    },
+    metricRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingVertical: 4,
+    },
+    metricLabel: {
+      fontSize: 14,
+      opacity: 0.8,
+    },
+    metricValue: {
+      fontSize: 14,
+      fontWeight: '600',
+    },
+    totalRow: {
+      borderTopWidth: 1,
+      borderTopColor: Colors[scheme].border,
+      marginTop: 8,
+      paddingTop: 8,
+    },
+    totalLabel: {
+      fontSize: 16,
+      fontWeight: '700',
+    },
+    totalValue: {
+      fontSize: 16,
+      fontWeight: '700',
+      color: Colors[scheme].tint,
+    },
+    lastUpdated: {
+      fontSize: 12,
+      opacity: 0.6,
+      textAlign: 'center',
+      marginTop: 8,
+    },
+  });
+
+  const styles = createStyles(scheme);
+
   const calculateStorageMetrics = React.useCallback(async () => {
     if (!user) {
       setStorageMetrics(null);
@@ -250,135 +386,3 @@ export default function Settings() {
     </View>
   );
 }
-const styles = StyleSheet.create({
-  wrapper: {
-    flex: 1,
-  },
-  scrollView: {
-    flex: 1,
-  },
-  container: {
-    padding: 16,
-    gap: 16,
-    flexGrow: 1,
-  },
-  pageTitle: {
-    marginBottom: 20,
-    textAlign: 'center',
-    // Ensure proper spacing and visibility
-    paddingHorizontal: 16,
-  },
-  cardTitle: {
-    fontWeight: '700',
-    marginBottom: 8
-  },
-  rowBetween: {
-    flexDirection: 'row',
-    alignItems: 'flex-start', // Changed from 'center' to handle multi-line text
-    justifyContent: 'space-between',
-    paddingVertical: 8,
-    minHeight: 32, // Ensure consistent row height
-  },
-  labelText: {
-    flex: 0,
-    minWidth: 60,
-    marginRight: 12,
-  },
-  valueText: {
-    flex: 1,
-    opacity: 0.9,
-    textAlign: 'right',
-    // Ensure text wraps properly within container
-    flexShrink: 1,
-  },
-  badge: {
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 999,
-    flexShrink: 0, // Prevent badge from shrinking
-  },
-  badgeText: {
-    color: '#fff',
-    fontWeight: '700',
-    fontSize: 12,
-  },
-
-  // Storage metrics styles
-  loadingContainer: {
-    padding: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: Colors.light.background, // Will be overridden by theme
-    borderRadius: 8,
-    marginBottom: 8,
-  },
-  loadingText: {
-    fontSize: 14,
-    opacity: 0.8,
-  },
-  errorContainer: {
-    padding: 16,
-    backgroundColor: '#fee2e2', // Light red background
-    borderRadius: 8,
-    marginBottom: 8,
-  },
-  errorText: {
-    color: '#dc2626', // Red text
-    fontSize: 14,
-    marginBottom: 8,
-  },
-  noDataContainer: {
-    padding: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: Colors.light.background, // Will be overridden by theme
-    borderRadius: 8,
-    marginBottom: 8,
-  },
-  noDataText: {
-    fontSize: 14,
-    opacity: 0.8,
-    marginBottom: 8,
-  },
-  metricsContainer: {
-    backgroundColor: Colors.light.background, // Will be overridden by theme
-    borderRadius: 8,
-    padding: 12,
-    marginBottom: 8,
-  },
-  metricRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 4,
-  },
-  metricLabel: {
-    fontSize: 14,
-    opacity: 0.8,
-  },
-  metricValue: {
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  totalRow: {
-    borderTopWidth: 1,
-    borderTopColor: Colors.light.border, // Will be overridden by theme
-    marginTop: 8,
-    paddingTop: 8,
-  },
-  totalLabel: {
-    fontSize: 16,
-    fontWeight: '700',
-  },
-  totalValue: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: Colors.light.tint, // Will be overridden by theme
-  },
-  lastUpdated: {
-    fontSize: 12,
-    opacity: 0.6,
-    textAlign: 'center',
-    marginTop: 8,
-  },
-});
